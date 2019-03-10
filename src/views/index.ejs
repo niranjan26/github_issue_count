@@ -3,7 +3,39 @@
 <head>
 	<title>Git Open Issues</title>
 </head>
+<style type="text/css">
+	table, th, td {
+  		border: 1px solid black;
+  		border-collapse: collapse;
+	}
+	th, td {
+  		padding: 15px;
+  		text-align: left;
+	}
+</style>
 <body>
-	<p>App intial set up</p>
+	<p>GIT Repository Open Issues</p>
+	<form action="/" method="post">
+		Enter Url:<input type="text" name="url">
+		<input type="submit" value="submit">
+	</form>
+	</br>
+	<% if(msg !== "") { %>
+		<h4> URL : <a href="<%= msg[0]['url'] %>" target="_blank"><%= msg[0]['url'] %></a> </h4> 
+		<table >
+			<tr>
+				<td>Total Open Issues</td>
+				<td>Issues Created in Last 24 Hours</td>
+				<td>Issues Created in Last week</td>
+				<td>Issues Created older than 7 days</td>
+			</tr>
+			<tr>
+				<td><%= msg[0]["total"] %></td>
+				<td><%= msg[0]["count24"] %></td>
+				<td><%= msg[0]["count7"] %></td>
+				<td><%= msg[0]["countOld"] %></td>
+			</tr>
+		</table>
+	<% } %>  
 </body>
 </html>
