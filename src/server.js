@@ -22,7 +22,7 @@ app.get('/',(req,res) => res.render('index',{msg:""}));
 
 //to handle the post request of the form data from homepage.
 app.post('/',(req,res) => {
-	let msgo=[]; 		//to store the issue counts
+	let issueCounts=[]; 		//to store the issue counts
 	let loop; 		//to calculate how many pages are to be requested for issues from the github api
 	let url=req.body.url.replace('github.com','api.github.com/repos'); 		//url to get the repo information 
 	var options = {
@@ -30,18 +30,20 @@ app.post('/',(req,res) => {
 	    method: 'GET',
 	    headers: {'user-agent': 'node.js'}  	//is required to get the data from github api
 	};
-	msgo.push({'url':req.body.url,'count24':0,'count7':0,'countOld':0}); //initialising msgo
+	issueCounts.push({'url':req.body.url,'countDay':0,'countWeek':0,'countOld':0}); //initialising issueCounts
 	utility.pages(options,function(err,loop){ 		//will return no. of pages(each page having 30 issues) as callback 
+		console.log(loop);
 		if(loop===0){
 			//if no bugs then render the response
-			res.render('index',{msg:msgo}); 
+			res.render('index',{msg:issueCounts}); 
 		}
 		let x; 		//x will store the callback function definition for callback recursion
-		utility.getCount(1,loop,options,msgo,x=function(err,msgo,next,page){ 		//will get count of issues from each page
+		utility.getCount(1,loop,options,issueCounts,x=function(err,issueCounts,next,page){ 		//will get count of issues from each page
+			console.log(issueCounts);
 			if(next){ 		//if there is a next page will go to next page else will render the response result
-				utility.getCount(page,loop,options,msgo,x); 	//recursive call
+				utility.getCount(page,loop,options,issueCounts,x); 	//recursive call
 			}else{
-				res.render('index',{msg:msgo}); 	//response
+				res.render('index',{msg:issueCounts}); 	//response
 			}
 		});
 	});

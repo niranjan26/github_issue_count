@@ -8,18 +8,18 @@ module.exports = {    //export module used to export methods to other js files u
 			body = JSON.parse(body);
 			if(body.has_issues){       //if no issues then return page count in callback else default value
 				openCount=body.open_issues_count;     //total number of open issues of a bug but also has pending pull requests
-				loop=Math.ceil(openCount/30);      //each page has 30 issues
+				loop=Math.ceil(openCount/100);      //each page has 100 issues
 				return callback(false,loop);
 			}else{
 				return callback(false,loop);
 			}
 		});
 	},
-	getCount : function(page,loop,options,msgo,callback){      //to get count of issues based on creation date
-		options['url']=options['url']+'/issues?q=state:open&page='+page;
+	getCount : function(page,loop,options,issueCounts,callback){      //to get count of issues based on creation date
+		options['url']=options['url']+'/issues?q=state:open&page='+page+'&per_page=100';       //setting the no. of issues per pafe to 100
 		if(page<=loop){       //if current page number is less or equal to total pages
-			let count24=0;    //count  of issues created less than a day ago
-			let count7=0;      //count of issues created in the last week but older than a day
+			let countDay=0;    //count  of issues created less than a day ago
+			let countWeek=0;      //count of issues created in the last week but older than a day
 			let countOld=0;      //count of issues older than a week
 			request(options,function(err,response,body){
 				body = JSON.parse(body);
@@ -27,23 +27,23 @@ module.exports = {    //export module used to export methods to other js files u
 					let time = timeDiff(body[j].created_at);
 					//remove pull requests from open issues and increments the corresponding count
 					if(("pull_request" in body[j])==false && time<=24){      
-						count24++;
+						countDay++;
 					}else if(("pull_request" in body[j])==false && time<=168){
-						count7++;
+						countWeek++;
 					}else if(("pull_request" in body[j])==false && time>168){
 						countOld++;
 					}
 				}
 				//updating the count in the main json object
-				msgo[0]["count24"]=msgo[0]["count24"]+count24;
-				msgo[0]["count7"]=msgo[0]["count7"]+count7;
-				msgo[0]["countOld"]=msgo[0]["countOld"]+countOld;
+				issueCounts[0]["countDay"]=issueCounts[0]["countDay"]+countDay;
+				issueCounts[0]["countWeek"]=issueCounts[0]["countWeek"]+countWeek;
+				issueCounts[0]["countOld"]=issueCounts[0]["countOld"]+countOld;
 				if(page === loop){
 					//returns callback with next as false to indicate no more page requests pending
-					return callback(false,msgo,false,page+1);      
+					return callback(false,issueCounts,false,page+1);      
 				}
 				//return next page true and increments page to get the issue count from next page
-				return callback(false,msgo,true,page+1);      
+				return callback(false,issueCounts,true,page+1);      
 			});
 		}
 	}
