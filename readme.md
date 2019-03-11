@@ -1,10 +1,10 @@
 ### GITHUB repository open issues
 
 #### How to setup:
-	install node
-	clone the github repository to your local system
-	open terminal and traverse to the repo path
-	run the command : npm install
+	* install node
+	* clone the github repository to your local system
+	* open terminal and traverse to the repo path
+	* run the command : npm install
 
 #### How to run:
 	* open terminal and traverse to the repo path
