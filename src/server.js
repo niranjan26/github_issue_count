@@ -3,13 +3,10 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import request from 'request';
 
+//export module having utility/tool functions to get as well as operate on data from github api requests
 let utility = require('./utility');
-let msgo=[];
-let count24=0;
-let count7=0;
-let countOld=0;
 
-//create app
+//created app
 const app = express();
 
 //setting app views path
@@ -20,64 +17,35 @@ app.set("view engine","ejs");
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
+//home-page(get) for the app
 app.get('/',(req,res) => res.render('index',{msg:""}));
 
+//to handle the post request of the form data from homepage.
 app.post('/',(req,res) => {
-	console.log(req.body);
-	let url=req.body.url.replace('github.com','api.github.com/repos');
+	let msgo=[]; 		//to store the issue counts
+	let loop; 		//to calculate how many pages are to be requested for issues from the github api
+	let url=req.body.url.replace('github.com','api.github.com/repos'); 		//url to get the repo information 
 	var options = {
 	    url: url,
 	    method: 'GET',
-	    headers: {'user-agent': 'node.js'}
+	    headers: {'user-agent': 'node.js'}  	//is required to get the data from github api
 	};
-	request(options,function(err,response,body){
-		//console.log(body);
-		let openCount,loop;
-		body = JSON.parse(body);
-		if(body.has_issues){
-			console.log(body.open_issues_count);
-			openCount=body.open_issues_count;
-			loop=Math.ceil(openCount/30);
+	msgo.push({'url':req.body.url,'count24':0,'count7':0,'countOld':0}); //initialising msgo
+	utility.pages(options,function(err,loop){ 		//will return no. of pages(each page having 30 issues) as callback 
+		if(loop===0){
+			//if no bugs then render the response
+			res.render('index',{msg:msgo}); 
 		}
-		msgo.push({'url':req.body.url,'total':count24+count7+countOld,'count24':count24,'count7':count7,'countOld':countOld});
-		for (var i=1;i<=loop;i++){
-			url = url+'/issues?q=state:open&page='+i;
-			//console.log(url);
-			var options = {
-		    	url: url,
-		    	method: 'GET',
-		    	headers: {'user-agent': 'node.js'}
-			};
-			count24=0;
-			count7=0;
-			countOld=0;
-			request(options,function(err,response,body){
-				body = JSON.parse(body);
-				//console.log(body[0]);
-				for (var j in body){
-					//console.log(body[i].url);
-					//console.log(utility.timeDiff(body[i].created_at));
-					let time = utility.timeDiff(body[j].created_at);
-					//console.log(time+" "+body[j].state);
-					if(("pull_request" in body[j])==false && time<=24){
-						count24++;
-					}else if(("pull_request" in body[j])==false && time<=168){
-						count7++;
-					}else if(("pull_request" in body[j])==false && time>168){
-						countOld++;
-					}
-				}
-				msgo[0]["count24"]=msgo[0]["count24"]+count24;
-				msgo[0]["count7"]=msgo[0]["count7"]+count7;
-				msgo[0]["countOld"]=msgo[0]["countOld"]+countOld;
-				console.log(i+" "+count24+" "+count7+" "+countOld);
-			});
-			//console.log(count24+" "+count7+" "+countOld);
-		}
-		//msgo.push({'url':req.body.url,'total':count24+count7+countOld,'count24':count24,'count7':count7,'countOld':countOld});
-		console.log(msgo);
-		res.render('index',{msg:msgo});
+		let x; 		//x will store the callback function definition for callback recursion
+		utility.getCount(1,loop,options,msgo,x=function(err,msgo,next,page){ 		//will get count of issues from each page
+			if(next){ 		//if there is a next page will go to next page else will render the response result
+				utility.getCount(page,loop,options,msgo,x); 	//recursive call
+			}else{
+				res.render('index',{msg:msgo}); 	//response
+			}
+		});
 	});
 });
 
+//setting up app socket
 app.listen('3000','localhost',() => console.log('Server running at http://localhost:3000'));
