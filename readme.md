@@ -33,4 +33,4 @@
 		based on creator userid 
 
 #### App live url path:
-	* URL : [link](http://35.182.95.109:3000/)
+	URL : [link]http://35.182.95.109:3000/
